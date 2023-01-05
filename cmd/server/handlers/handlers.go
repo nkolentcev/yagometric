@@ -26,6 +26,7 @@ func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 		log.Panicln("unable convert string metric")
 	}
 	mh.storage.AddMetric(name, value)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request) {
@@ -43,11 +44,11 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 }
 
 func (mh MyMetricHandler) GetMetricsValuesList(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Actual metric value\n <ul>"))
+	//w.Write([]byte("Actual metric value\n <ul>"))
 	fmt.Printf("%v", mh.storage.Metrics)
 	for n, v := range mh.storage.Metrics {
-		samp := fmt.Sprintf("<li> %s : %v </li>\n", n, v)
+		samp := fmt.Sprintf("-> %s : %v ;\n", n, v)
 		w.Write([]byte(samp))
 	}
-	w.Write([]byte("</ul>"))
+	//w.Write([]byte("</ul>"))
 }
