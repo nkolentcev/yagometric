@@ -53,7 +53,7 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 	}
 
 	resp := mh.storage.GetMetricValue(name)
-	if resp == nil {
+	if resp == 0 {
 		w.WriteHeader(http.StatusNotFound) //501 метрика не найдена по имени
 		log.Printf("wrong metric name %s\n", name)
 		return
@@ -65,7 +65,7 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 			log.Printf("cant write response on body")
 		}
 	case "counter":
-		_, err := w.Write([]byte(fmt.Sprintf("%d\n", resp)))
+		_, err := w.Write([]byte(fmt.Sprintf("%v\n", int(resp))))
 		if err != nil {
 			log.Printf("cant write response on body")
 		}

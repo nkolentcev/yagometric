@@ -35,10 +35,10 @@ func (ms *MemStorage) AddMetric(name string, value float64, metricType string) {
 	ms.mutex.Unlock()
 }
 
-func (ms *MemStorage) GetMetricValue(name string) (value any) {
+func (ms *MemStorage) GetMetricValue(name string) (value float64) {
 	if _, ok := ms.Metrics[name]; ok {
 		value = ms.Metrics[name]
 		return value
 	}
-	return nil
+	return 0
 }
