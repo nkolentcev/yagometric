@@ -24,9 +24,14 @@ func NewMemStorage() *MemStorage {
 	return &ms
 }
 
-func (ms *MemStorage) AddMetric(name string, value float64) {
+func (ms *MemStorage) AddMetric(name string, value float64, metricType string) {
 	ms.mutex.Lock()
-	ms.Metrics[name] = value
+	if metricType == "counter" {
+		ms.Metrics[name] += value
+	} else {
+		ms.Metrics[name] = value
+	}
+
 	ms.mutex.Unlock()
 }
 
