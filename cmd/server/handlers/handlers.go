@@ -42,15 +42,24 @@ func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	///w.WriteHeader(http.StatusOK)
 	name := chi.URLParam(r, "name")
+
+	metricType := chi.URLParam(r, "type")
+
+	if !(metricType == "gauge") && !(metricType == "counter") {
+		w.WriteHeader(http.StatusNotFound) //404
+		return
+	}
+
 	resp := mh.storage.GetMetricValue(name)
 	if resp == nil {
-		w.WriteHeader(http.StatusNotImplemented) //501 метрика не найдена по имени
+		w.WriteHeader(http.StatusNotFound) //501 метрика не найдена по имени
 		log.Printf("wrong metric name %s\n", name)
 		return
 	}
-	_, err := w.Write([]byte(fmt.Sprintf("%v\n", resp)))
+
+	_, err := w.Write([]byte(fmt.Sprintf("%f\n", resp)))
 	if err != nil {
 		log.Printf("cant write response on body")
 	}
