@@ -13,7 +13,7 @@ func (*MemStorage) AddMetrics(name string, value float64) {
 }
 
 type Storage interface {
-	AddMetrics(name string, value float64)
+	AddMetric(name string, value float64)
 }
 
 func NewMemStorage() *MemStorage {

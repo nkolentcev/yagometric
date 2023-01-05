@@ -37,7 +37,7 @@ func (mh MyMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(rw, "wrong metric value", http.StatusBadRequest)
 	}
-	mh.storage.AddMetrics(metricName, metricValue)
+	mh.storage.AddMetric(metricName, metricValue)
 
 	rw.Header().Set("Content-Type", "text/plain")
 	rw.WriteHeader(http.StatusOK)

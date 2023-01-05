@@ -9,7 +9,7 @@ import (
 	"github.com/nkolentcev/yagometric/cmd/server/storage"
 )
 
-const endpoint = "127.0.0.1:8080"
+const endpoint = ":8080"
 
 func main() {
 
