@@ -37,7 +37,7 @@ func TestMain(t *testing.T) {
 
 	status, body := tsstRequest(t, st, "GET", "/")
 	assert.Equal(t, http.StatusOK, status)
-	assert.Equal(t, "-> Sys : 911.911\n", body)
+	assert.Equal(t, "-> Sys : 911.911 ;\n", body)
 }
 
 func tsstRequest(t *testing.T, st *httptest.Server, method, uri string) (int, string) {
