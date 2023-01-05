@@ -50,6 +50,6 @@ func tsstRequest(t *testing.T, st *httptest.Server, method, uri string) (int, st
 
 	rb, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
-
+	resp.Body.Close()
 	return resp.StatusCode, string(rb)
 }
