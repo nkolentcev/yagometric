@@ -20,6 +20,7 @@ func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
 
 func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 
+	w.WriteHeader(http.StatusOK)
 	name := chi.URLParam(r, "name")
 
 	metricType := chi.URLParam(r, "type")
@@ -35,7 +36,7 @@ func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 		log.Println("unable convert string metric")
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+
 	mh.storage.AddMetric(name, value, metricType)
 
 }
@@ -47,7 +48,7 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 	metricType := chi.URLParam(r, "type")
 
 	if !(metricType == "gauge") && !(metricType == "counter") {
-		w.WriteHeader(http.StatusNotFound) //404
+		w.WriteHeader(http.StatusNotImplemented) // 501 в тесте
 		return
 	}
 
