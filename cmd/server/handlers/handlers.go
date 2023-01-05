@@ -28,7 +28,7 @@ func (mh MyMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	sl := strings.Split(url, "/")
 
 	if len(sl) != 4 {
-		http.Error(rw, "wrong endpoint schema", http.StatusNotFound)
+		http.Error(rw, "wrong endpoint schema", http.StatusBadRequest)
 		return
 	}
 
