@@ -20,13 +20,12 @@ func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
 
 func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 
-	w.WriteHeader(http.StatusOK)
 	name := chi.URLParam(r, "name")
 
 	metricType := chi.URLParam(r, "type")
 
 	if !(metricType == "gauge") && !(metricType == "counter") {
-		w.WriteHeader(http.StatusNotFound) //404
+		w.WriteHeader(http.StatusNotImplemented) //404
 		return
 	}
 
@@ -38,6 +37,7 @@ func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mh.storage.AddMetric(name, value, metricType)
+	w.WriteHeader(http.StatusOK)
 
 }
 
