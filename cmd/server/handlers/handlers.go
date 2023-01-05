@@ -19,30 +19,32 @@ func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
 }
 
 func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	name := chi.URLParam(r, "name")
 
 	metricType := chi.URLParam(r, "type")
 
 	if !(metricType == "gauge") && !(metricType == "counter") {
-		w.WriteHeader(http.StatusNotImplemented)
+		w.WriteHeader(http.StatusNotFound) //404
 		return
 	}
 
 	value, err := strconv.ParseFloat(chi.URLParam(r, "value"), 64)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest) //400
 		log.Panicln("unable convert string metric")
 		return
 	}
 	mh.storage.AddMetric(name, value, metricType)
-	w.WriteHeader(http.StatusOK)
+
 }
 
 func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	name := chi.URLParam(r, "name")
 	resp := mh.storage.GetMetricValue(name)
 	if resp == nil {
-		w.WriteHeader(http.StatusNotImplemented)
+		w.WriteHeader(http.StatusNotImplemented) //501 метрика не найдена по имени
 		log.Printf("wrong metric name %s\n", name)
 		return
 	}
@@ -50,7 +52,7 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		log.Printf("cant write response on body")
 	}
-	w.WriteHeader(http.StatusOK)
+
 }
 
 func (mh MyMetricHandler) GetMetricsValuesList(w http.ResponseWriter, r *http.Request) {

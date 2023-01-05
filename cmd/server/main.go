@@ -24,10 +24,8 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", handler.GetMetricsValuesList)
-		r.Get("/value/gauge/{name}", handler.GetMetricValue)
-		r.Get("/value/counter/{name}", handler.GetMetricValue)
-		r.Post("/update/gauge/{name}/{value}", handler.UpdateMetric)
-		r.Post("/update/counter/{name}/{value}", handler.UpdateMetric)
+		r.Get("/value/{type}/{name}", handler.GetMetricValue)
+		r.Post("/update/{type}/{name}/{value}", handler.UpdateMetric)
 	})
 
 	log.Println(http.ListenAndServe(":8080", r))
