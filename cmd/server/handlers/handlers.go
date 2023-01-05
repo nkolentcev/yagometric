@@ -20,10 +20,12 @@ func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
 
 func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
+
 	value, err := strconv.ParseFloat(chi.URLParam(r, "value"), 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Panicln("unable convert string metric")
+		return
 	}
 	mh.storage.AddMetric(name, value)
 	w.WriteHeader(http.StatusOK)
@@ -33,8 +35,9 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 	name := chi.URLParam(r, "name")
 	resp := mh.storage.GetMetricValue(name)
 	if resp == nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusNotImplemented)
 		log.Printf("wrong metric name %s\n", name)
+		return
 	}
 	_, err := w.Write([]byte(fmt.Sprintf("%v\n", resp)))
 	if err != nil {
