@@ -32,7 +32,8 @@ func (mh MyMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	metricType := sl[1]
-	if metricType != "gauge" || metricType != "counter" {
+
+	if !(metricType == "gauge") && !(metricType == "counter") {
 		http.Error(rw, "wrong metric type", http.StatusNotImplemented)
 	}
 	metricName := sl[2]
