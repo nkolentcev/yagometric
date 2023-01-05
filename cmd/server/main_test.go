@@ -19,7 +19,7 @@ type counter int64
 
 func TestMain(t *testing.T) {
 	ms := storage.NewMemStorage()
-	handler := handlers.NewMetricHandler()
+	handler := handlers.NewMetricHandler(ms)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
