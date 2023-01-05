@@ -19,7 +19,7 @@ func NewMetricHandler(storage storage.Storage) MyMetricHandler {
 func (mh MyMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
-		http.Error(rw, "its not a post method on request", http.StatusBadRequest)
+		http.Error(rw, "its not a post method on request", http.StatusNotFound)
 		return
 	}
 	url := r.URL.Path
@@ -28,14 +28,14 @@ func (mh MyMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	sl := strings.Split(url, "/")
 
 	if len(sl) != 4 {
-		http.Error(rw, "wrong endpoint schema", http.StatusBadRequest)
+		http.Error(rw, "wrong endpoint schema", http.StatusNotFound)
 		return
 	}
 
 	metricName := sl[2]
 	metricValue, err := strconv.ParseFloat(sl[3], 64)
 	if err != nil {
-		http.Error(rw, "wrong metric value", http.StatusBadRequest)
+		http.Error(rw, "wrong metric value", http.StatusNotFound)
 	}
 	mh.storage.AddMetric(metricName, metricValue)
 
