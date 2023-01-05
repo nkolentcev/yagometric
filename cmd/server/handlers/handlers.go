@@ -58,12 +58,23 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 		log.Printf("wrong metric name %s\n", name)
 		return
 	}
-
-	_, err := w.Write([]byte(fmt.Sprintf("%f\n", resp)))
-	if err != nil {
-		log.Printf("cant write response on body")
+	switch metricType {
+	case "gauge":
+		_, err := w.Write([]byte(fmt.Sprintf("%d\n", resp)))
+		if err != nil {
+			log.Printf("cant write response on body")
+		}
+	case "counter":
+		_, err := w.Write([]byte(fmt.Sprintf("%f\n", resp)))
+		if err != nil {
+			log.Printf("cant write response on body")
+		}
+	default:
+		_, err := w.Write([]byte(fmt.Sprintf("%v\n", resp)))
+		if err != nil {
+			log.Printf("cant write response on body")
+		}
 	}
-
 }
 
 func (mh MyMetricHandler) GetMetricsValuesList(w http.ResponseWriter, r *http.Request) {
