@@ -60,12 +60,12 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 	}
 	switch metricType {
 	case "gauge":
-		_, err := w.Write([]byte(fmt.Sprintf("%d\n", resp)))
+		_, err := w.Write([]byte(fmt.Sprintf("%f\n", resp)))
 		if err != nil {
 			log.Printf("cant write response on body")
 		}
 	case "counter":
-		_, err := w.Write([]byte(fmt.Sprintf("%f\n", resp)))
+		_, err := w.Write([]byte(fmt.Sprintf("%d\n", resp)))
 		if err != nil {
 			log.Printf("cant write response on body")
 		}
