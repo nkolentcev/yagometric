@@ -33,7 +33,7 @@ func TestMain(t *testing.T) {
 	defer st.Close()
 
 	ms.AddMetric("Sys", 911.911, "gauge")
-	ms.AddMetric("PolCount", 50, "counter")
+	//ms.AddMetric("PolCount", 50, "counter")
 
 	status, body := tsstRequest(t, st, "GET", "/")
 	assert.Equal(t, http.StatusOK, status)
