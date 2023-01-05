@@ -17,18 +17,9 @@ func main() {
 
 	memStorage := storage.NewMemStorage()
 	handler := handlers.NewMetricHandler(memStorage)
-	// mux := http.NewServeMux()
-	// mux.Handle("/update/", handler)
 
 	fmt.Println("Start server")
-	// server := &http.Server{
-	// 	Addr:    endpoint,
-	// 	Handler: mux,
-	// }
-	// err := server.ListenAndServe()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Route("/", func(r chi.Router) {

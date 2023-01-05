@@ -33,7 +33,7 @@ func (mh MyMetricHandler) GetMetricValue(w http.ResponseWriter, r *http.Request)
 	resp := mh.storage.GetMetricValue(name)
 	if resp == nil {
 		w.WriteHeader(http.StatusNotFound)
-		log.Println("wrong metric name %s", name)
+		log.Printf("wrong metric name %s\n", name)
 	}
 	_, err := w.Write([]byte(fmt.Sprintf("%v\n", resp)))
 	if err != nil {
@@ -46,7 +46,7 @@ func (mh MyMetricHandler) GetMetricsValuesList(w http.ResponseWriter, r *http.Re
 	w.Write([]byte("Actual metric value\n <ul>"))
 	fmt.Printf("%v", mh.storage.Metrics)
 	for n, v := range mh.storage.Metrics {
-		samp := fmt.Sprintf("<li> %s : %v </li>", n, v)
+		samp := fmt.Sprintf("<li> %s : %v </li>\n", n, v)
 		w.Write([]byte(samp))
 	}
 	w.Write([]byte("</ul>"))
