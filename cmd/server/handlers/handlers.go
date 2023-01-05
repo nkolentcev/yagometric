@@ -28,10 +28,13 @@ func (mh MyMetricHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	sl := strings.Split(url, "/")
 
 	if len(sl) != 4 {
-		http.Error(rw, "wrong endpoint schema", http.StatusBadGateway) //400
+		http.Error(rw, "wrong endpoint schema", http.StatusNotFound) //400
 		return
 	}
-
+	metricType := sl[1]
+	if metricType != "gauge" || metricType != "counter" {
+		http.Error(rw, "wrong metric type", http.StatusNotImplemented)
+	}
 	metricName := sl[2]
 	metricValue, err := strconv.ParseFloat(sl[3], 64)
 	if err != nil {
