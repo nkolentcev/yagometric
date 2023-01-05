@@ -49,6 +49,8 @@ func TestStorage_Handlers(t *testing.T) {
 			if statusCode := resp.StatusCode; statusCode != tt.wantCode {
 				t.Errorf("want %d, got %d", tt.wantCode, statusCode)
 			}
+
+			resp.Body.Close()
 		})
 	}
 }
