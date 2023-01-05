@@ -25,14 +25,14 @@ func TestStorage_Handlers(t *testing.T) {
 			wantCode: 200,
 		},
 		{
-			name:     "test code 404 - bad request schema",
+			name:     "test code 502 - bad request schema",
 			url:      "http://127.0.0.1:8080/update/counter/100",
-			wantCode: 400,
+			wantCode: 502,
 		},
 		{
-			name:     "test code 200 - ok",
+			name:     "test code 400 - wrong value",
 			url:      "http://127.0.0.1:8080/update/gauge/Alloc/aaabbb",
-			wantCode: 200,
+			wantCode: 400,
 		},
 	}
 
