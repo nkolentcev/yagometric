@@ -21,13 +21,20 @@ func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
 func (mh MyMetricHandler) UpdateMetric(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
+	metricType := chi.URLParam(r, "type")
+
+	if !(metricType == "gauge") && !(metricType == "counter") {
+		w.WriteHeader(http.StatusNotImplemented)
+		return
+	}
+
 	value, err := strconv.ParseFloat(chi.URLParam(r, "value"), 64)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Panicln("unable convert string metric")
 		return
 	}
-	mh.storage.AddMetric(name, value)
+	mh.storage.AddMetric(name, value, metricType)
 	w.WriteHeader(http.StatusOK)
 }
 
