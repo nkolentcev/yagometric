@@ -6,7 +6,10 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 )
 
@@ -23,10 +26,13 @@ type counter int64
 func main() {
 
 	fmt.Println("start")
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGINT)
 	go readMetrics(ctx)
 
-	<-ctx.Done()
+	<-sig
+	cancel()
 }
 
 func sendMetrics(ctx context.Context, uri string) {
@@ -57,8 +63,9 @@ func updateCounterMetric(ctx context.Context, metricName string, metricValue cou
 
 func readMetrics(ctx context.Context) {
 	var rtm runtime.MemStats
+	count := 0
 	for {
-		count := 0
+
 		<-time.After(pollInterval)
 
 		runtime.ReadMemStats(&rtm)
