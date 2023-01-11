@@ -22,40 +22,39 @@ type gauge float64
 type counter int64
 
 type Metrics struct {
-	Alloc,
-	BuckHashSys,
-	Frees,
-	GCCPUFraction,
-	GCSys,
-	HeapAlloc,
-	HeapIdle,
-	HeapInuse,
-	HeapObjects,
-	HeapReleased,
-	HeapSys,
-	LastGC,
-	Lookups,
-	MCacheInuse,
-	MCacheSys,
-	MSpanInuse,
-	MSpanSys,
-	Mallocs,
-	NextGC,
-	NumForcedGC,
-	NumGC,
-	OtherSys,
-	PauseTotalNs,
-	StackInuse,
-	StackSys,
-	Sys,
-	TotalAlloc,
-	RandomValue gauge
-	PollCount counter
-	//mu        sync.Mutex
+	Alloc         gauge
+	BuckHashSys   gauge
+	Frees         gauge
+	GCCPUFraction gauge
+	GCSys         gauge
+	HeapAlloc     gauge
+	HeapIdle      gauge
+	HeapInuse     gauge
+	HeapObjects   gauge
+	HeapReleased  gauge
+	HeapSys       gauge
+	LastGC        gauge
+	Lookups       gauge
+	MCacheInuse   gauge
+	MCacheSys     gauge
+	MSpanInuse    gauge
+	MSpanSys      gauge
+	Mallocs       gauge
+	NextGC        gauge
+	NumForcedGC   gauge
+	NumGC         gauge
+	OtherSys      gauge
+	PauseTotalNs  gauge
+	StackInuse    gauge
+	StackSys      gauge
+	Sys           gauge
+	TotalAlloc    gauge
+	RandomValue   gauge
+	PollCount     counter
 }
 
 func main() {
-	//ctx, cancel := context.WithCancel(context.Background())
+
 	fmt.Println("start")
 	ctx := context.Background()
 	var m = new(Metrics)
@@ -66,6 +65,7 @@ func main() {
 }
 
 func updateMetrics(ctx context.Context, m *Metrics) {
+
 	var metricType string
 	var metricValue string
 
@@ -94,7 +94,7 @@ func updateMetrics(ctx context.Context, m *Metrics) {
 				metricValue = fmt.Sprintf("%v", data)
 			}
 
-			endpoint := fmt.Sprintf("http://%s:%s/update/%s/%s/%s", host, port, metricType, tf.Name, metricValue) //-> TODO -  сборку адреса в отдельную функцию?
+			endpoint := fmt.Sprintf("http://%s:%s/update/%s/%s/%s", host, port, metricType, tf.Name, metricValue)
 			log.Println(endpoint)
 			request, err := http.NewRequest(http.MethodPost, endpoint, nil)
 			if err != nil {
@@ -117,8 +117,6 @@ func readMetrics(ctx context.Context, m *Metrics) {
 		<-time.After(pollInterval)
 
 		runtime.ReadMemStats(&rtm)
-
-		//m.mu.Lock()
 
 		m.Alloc = gauge(rtm.Alloc)
 		m.BuckHashSys = gauge(rtm.BuckHashSys)
