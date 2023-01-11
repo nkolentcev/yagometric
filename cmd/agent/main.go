@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"reflect"
 	"runtime"
 	"time"
 )
@@ -21,136 +20,81 @@ const (
 type gauge float64
 type counter int64
 
-type Metrics struct {
-	Alloc         gauge
-	BuckHashSys   gauge
-	Frees         gauge
-	GCCPUFraction gauge
-	GCSys         gauge
-	HeapAlloc     gauge
-	HeapIdle      gauge
-	HeapInuse     gauge
-	HeapObjects   gauge
-	HeapReleased  gauge
-	HeapSys       gauge
-	LastGC        gauge
-	Lookups       gauge
-	MCacheInuse   gauge
-	MCacheSys     gauge
-	MSpanInuse    gauge
-	MSpanSys      gauge
-	Mallocs       gauge
-	NextGC        gauge
-	NumForcedGC   gauge
-	NumGC         gauge
-	OtherSys      gauge
-	PauseTotalNs  gauge
-	StackInuse    gauge
-	StackSys      gauge
-	Sys           gauge
-	TotalAlloc    gauge
-	RandomValue   gauge
-	PollCount     counter
-}
-
 func main() {
 
 	fmt.Println("start")
 	ctx := context.Background()
-	var m = new(Metrics)
-	go readMetrics(ctx, m)
-	go updateMetrics(ctx, m)
+	go readMetrics(ctx)
 
 	<-ctx.Done()
 }
 
-func updateMetrics(ctx context.Context, m *Metrics) {
-
-	var metricType string
-	var metricValue string
+func sendMetrics(ctx context.Context, uri string) {
 
 	client := http.Client{}
+	request, err := http.NewRequest(http.MethodPost, uri, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
+	request.Header.Add("Content-Type", "text/plain")
 
-	for {
-		<-time.After(reportInterval)
-		dv := reflect.ValueOf(m).Elem()
-		for i := 0; i < dv.NumField(); i++ {
-
-			vf := dv.Field(i)
-			data := vf.Interface()
-			tf := dv.Type().Field(i)
-			switch data.(type) {
-			case gauge:
-				data = vf.Interface().(gauge)
-				metricType = "gauge"
-				metricValue = fmt.Sprintf("%f", data)
-			case counter:
-				data = vf.Interface().(counter)
-				metricType = "counter"
-				metricValue = fmt.Sprintf("%v", data)
-			default:
-				log.Panicf("Undefined metric type")
-				metricType = "undefined"
-				metricValue = fmt.Sprintf("%v", data)
-			}
-
-			endpoint := fmt.Sprintf("http://%s:%s/update/%s/%s/%s", host, port, metricType, tf.Name, metricValue)
-			log.Println(endpoint)
-			request, err := http.NewRequest(http.MethodPost, endpoint, nil)
-			if err != nil {
-				fmt.Println(err)
-			}
-			request.Header.Add("Content-Type", "text/plain")
-
-			response, err := client.Do(request)
-			if err != nil {
-				log.Println(err)
-				response.Body.Close()
-			}
-		}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Println(err)
+		response.Body.Close()
 	}
 }
 
-func readMetrics(ctx context.Context, m *Metrics) {
+func updateGaugeMetric(ctx context.Context, metricName string, metricValue gauge) {
+	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%f", host, port, "gauge", metricName, metricValue)
+	sendMetrics(ctx, uri)
+}
+
+func updateCounterMetric(ctx context.Context, metricName string, metricValue counter) {
+	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%v", host, port, "counter", metricName, metricValue)
+	sendMetrics(ctx, uri)
+}
+
+func readMetrics(ctx context.Context) {
 	var rtm runtime.MemStats
 	for {
+		count := 0
 		<-time.After(pollInterval)
 
 		runtime.ReadMemStats(&rtm)
 
-		m.Alloc = gauge(rtm.Alloc)
-		m.BuckHashSys = gauge(rtm.BuckHashSys)
-		m.Frees = gauge(rtm.Frees)
-		m.GCCPUFraction = gauge(rtm.GCCPUFraction)
-		m.GCSys = gauge(rtm.GCSys)
-		m.HeapAlloc = gauge(rtm.HeapAlloc)
-		m.HeapIdle = gauge(rtm.HeapInuse)
-		m.HeapInuse = gauge(rtm.HeapInuse)
-		m.HeapObjects = gauge(rtm.HeapObjects)
-		m.HeapReleased = gauge(rtm.HeapReleased)
-		m.HeapSys = gauge(rtm.HeapSys)
-		m.LastGC = gauge(rtm.LastGC)
-		m.Lookups = gauge(rtm.Lookups)
-		m.MCacheInuse = gauge(rtm.MCacheInuse)
-		m.MCacheSys = gauge(rtm.MCacheSys)
-		m.MSpanInuse = gauge(rtm.MSpanInuse)
-		m.MSpanSys = gauge(rtm.MSpanSys)
-		m.Mallocs = gauge(rtm.Mallocs)
-		m.NextGC = gauge(rtm.NextGC)
-		m.NumForcedGC = gauge(rtm.NumForcedGC)
-		m.NumGC = gauge(rtm.NumGC)
-		m.OtherSys = gauge(rtm.OtherSys)
-		m.PauseTotalNs = gauge(rtm.PauseTotalNs)
-		m.StackInuse = gauge(rtm.StackInuse)
-		m.StackSys = gauge(rtm.StackSys)
-		m.Sys = gauge(rtm.Sys)
-		m.TotalAlloc = gauge(rtm.TotalAlloc)
-		m.RandomValue = gauge(rand.Float64())
+		updateGaugeMetric(ctx, "Alloc", gauge(rtm.Alloc))
+		updateGaugeMetric(ctx, "BuckHashSys", gauge(rtm.BuckHashSys))
+		updateGaugeMetric(ctx, "Frees", gauge(rtm.Frees))
+		updateGaugeMetric(ctx, "GCCPUFraction", gauge(rtm.GCCPUFraction))
+		updateGaugeMetric(ctx, "GCSys", gauge(rtm.GCSys))
+		updateGaugeMetric(ctx, "HeapAlloc", gauge(rtm.HeapAlloc))
+		updateGaugeMetric(ctx, "HeapIdle", gauge(rtm.HeapInuse))
+		updateGaugeMetric(ctx, "HeapInuse", gauge(rtm.HeapInuse))
+		updateGaugeMetric(ctx, "HeapObjects", gauge(rtm.HeapObjects))
+		updateGaugeMetric(ctx, "HeapReleased", gauge(rtm.HeapReleased))
+		updateGaugeMetric(ctx, "HeapSys", gauge(rtm.HeapSys))
+		updateGaugeMetric(ctx, "LastGC", gauge(rtm.LastGC))
+		updateGaugeMetric(ctx, "Lookups", gauge(rtm.Lookups))
+		updateGaugeMetric(ctx, "MCacheInuse", gauge(rtm.MCacheInuse))
+		updateGaugeMetric(ctx, "MCacheSys", gauge(rtm.MCacheSys))
+		updateGaugeMetric(ctx, "MSpanInuse", gauge(rtm.MSpanInuse))
+		updateGaugeMetric(ctx, "MSpanSys", gauge(rtm.MSpanSys))
+		updateGaugeMetric(ctx, "Mallocs", gauge(rtm.Mallocs))
+		updateGaugeMetric(ctx, "NextGC", gauge(rtm.NextGC))
+		updateGaugeMetric(ctx, "NumForcedGC", gauge(rtm.NumForcedGC))
+		updateGaugeMetric(ctx, "NumGC", gauge(rtm.NumGC))
+		updateGaugeMetric(ctx, "OtherSys", gauge(rtm.OtherSys))
+		updateGaugeMetric(ctx, "PauseTotalNs", gauge(rtm.PauseTotalNs))
+		updateGaugeMetric(ctx, "StackInuse", gauge(rtm.StackInuse))
+		updateGaugeMetric(ctx, "StackSys", gauge(rtm.StackSys))
+		updateGaugeMetric(ctx, "Sys", gauge(rtm.Sys))
+		updateGaugeMetric(ctx, "TotalAlloc", gauge(rtm.TotalAlloc))
+		updateGaugeMetric(ctx, "RandomValue", gauge(rand.Float64()))
 
-		m.PollCount++
+		count++
+		updateCounterMetric(ctx, "PollCount", counter(count))
 
-		//m.mu.Unlock()
-
-		log.Printf("metrics updated %v", m.PollCount)
+		log.Printf("metrics updated %v", count)
 	}
 }
