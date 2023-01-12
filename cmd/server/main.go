@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/nkolentcev/yagometric/cmd/internal/handlers"
-	"github.com/nkolentcev/yagometric/cmd/internal/storage"
+	"github.com/nkolentcev/yagometric/internal/handlers"
+	"github.com/nkolentcev/yagometric/internal/storage"
 )
 
 const endpoint = ":8080"
