@@ -23,14 +23,46 @@ const (
 type gauge float64
 type counter int64
 
-func main() {
+type metrics struct {
+	Alloc         gauge
+	BuckHashSys   gauge
+	Frees         gauge
+	GCCPUFraction gauge
+	GCSys         gauge
+	HeapAlloc     gauge
+	HeapIdle      gauge
+	HeapInuse     gauge
+	HeapObjects   gauge
+	HeapReleased  gauge
+	HeapSys       gauge
+	LastGC        gauge
+	Lookups       gauge
+	MCacheInuse   gauge
+	MCacheSys     gauge
+	MSpanInuse    gauge
+	MSpanSys      gauge
+	Mallocs       gauge
+	NextGC        gauge
+	NumForcedGC   gauge
+	NumGC         gauge
+	OtherSys      gauge
+	PauseTotalNs  gauge
+	StackInuse    gauge
+	StackSys      gauge
+	Sys           gauge
+	TotalAlloc    gauge
+	RandomValue   gauge
+	PollCount     counter
+}
 
+func main() {
+	var mem = new(metrics)
 	fmt.Println("start")
 	ctx, cancel := context.WithCancel(context.Background())
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGINT)
-	go readMetrics(ctx)
-
+	go readMetrics(ctx, mem)
+	go updateMetrics(ctx, mem)
 	<-sig
 	cancel()
 }
@@ -61,7 +93,43 @@ func updateCounterMetric(ctx context.Context, metricName string, metricValue cou
 	sendMetrics(ctx, uri)
 }
 
-func readMetrics(ctx context.Context) {
+func updateMetrics(ctx context.Context, mem *metrics) {
+	for {
+		<-time.After(reportInterval)
+		updateGaugeMetric(ctx, "Alloc", mem.Alloc)
+		updateGaugeMetric(ctx, "BuckHashSys", mem.BuckHashSys)
+		updateGaugeMetric(ctx, "Frees", mem.Frees)
+		updateGaugeMetric(ctx, "GCCPUFraction", mem.GCCPUFraction)
+		updateGaugeMetric(ctx, "GCSys", mem.GCSys)
+		updateGaugeMetric(ctx, "HeapAlloc", mem.HeapAlloc)
+		updateGaugeMetric(ctx, "HeapIdle", mem.HeapInuse)
+		updateGaugeMetric(ctx, "HeapInuse", mem.HeapInuse)
+		updateGaugeMetric(ctx, "HeapObjects", mem.HeapObjects)
+		updateGaugeMetric(ctx, "HeapReleased", mem.HeapReleased)
+		updateGaugeMetric(ctx, "HeapSys", mem.HeapSys)
+		updateGaugeMetric(ctx, "LastGC", mem.LastGC)
+		updateGaugeMetric(ctx, "Lookups", mem.Lookups)
+		updateGaugeMetric(ctx, "MCacheInuse", mem.MCacheInuse)
+		updateGaugeMetric(ctx, "MCacheSys", mem.MCacheSys)
+		updateGaugeMetric(ctx, "MSpanInuse", mem.MSpanInuse)
+		updateGaugeMetric(ctx, "MSpanSys", mem.MSpanSys)
+		updateGaugeMetric(ctx, "Mallocs", mem.Mallocs)
+		updateGaugeMetric(ctx, "NextGC", mem.NextGC)
+		updateGaugeMetric(ctx, "NumForcedGC", mem.NumForcedGC)
+		updateGaugeMetric(ctx, "NumGC", mem.NumGC)
+		updateGaugeMetric(ctx, "OtherSys", mem.OtherSys)
+		updateGaugeMetric(ctx, "PauseTotalNs", mem.PauseTotalNs)
+		updateGaugeMetric(ctx, "StackInuse", mem.StackInuse)
+		updateGaugeMetric(ctx, "StackSys", mem.StackSys)
+		updateGaugeMetric(ctx, "Sys", mem.Sys)
+		updateGaugeMetric(ctx, "TotalAlloc", mem.TotalAlloc)
+		updateGaugeMetric(ctx, "RandomValue", mem.RandomValue)
+		updateCounterMetric(ctx, "PollCount", mem.PollCount)
+		log.Printf("metrics sent %v", mem.PollCount)
+	}
+}
+
+func readMetrics(ctx context.Context, mem *metrics) {
 	var rtm runtime.MemStats
 	count := 0
 	for {
@@ -70,37 +138,37 @@ func readMetrics(ctx context.Context) {
 
 		runtime.ReadMemStats(&rtm)
 
-		updateGaugeMetric(ctx, "Alloc", gauge(rtm.Alloc))
-		updateGaugeMetric(ctx, "BuckHashSys", gauge(rtm.BuckHashSys))
-		updateGaugeMetric(ctx, "Frees", gauge(rtm.Frees))
-		updateGaugeMetric(ctx, "GCCPUFraction", gauge(rtm.GCCPUFraction))
-		updateGaugeMetric(ctx, "GCSys", gauge(rtm.GCSys))
-		updateGaugeMetric(ctx, "HeapAlloc", gauge(rtm.HeapAlloc))
-		updateGaugeMetric(ctx, "HeapIdle", gauge(rtm.HeapInuse))
-		updateGaugeMetric(ctx, "HeapInuse", gauge(rtm.HeapInuse))
-		updateGaugeMetric(ctx, "HeapObjects", gauge(rtm.HeapObjects))
-		updateGaugeMetric(ctx, "HeapReleased", gauge(rtm.HeapReleased))
-		updateGaugeMetric(ctx, "HeapSys", gauge(rtm.HeapSys))
-		updateGaugeMetric(ctx, "LastGC", gauge(rtm.LastGC))
-		updateGaugeMetric(ctx, "Lookups", gauge(rtm.Lookups))
-		updateGaugeMetric(ctx, "MCacheInuse", gauge(rtm.MCacheInuse))
-		updateGaugeMetric(ctx, "MCacheSys", gauge(rtm.MCacheSys))
-		updateGaugeMetric(ctx, "MSpanInuse", gauge(rtm.MSpanInuse))
-		updateGaugeMetric(ctx, "MSpanSys", gauge(rtm.MSpanSys))
-		updateGaugeMetric(ctx, "Mallocs", gauge(rtm.Mallocs))
-		updateGaugeMetric(ctx, "NextGC", gauge(rtm.NextGC))
-		updateGaugeMetric(ctx, "NumForcedGC", gauge(rtm.NumForcedGC))
-		updateGaugeMetric(ctx, "NumGC", gauge(rtm.NumGC))
-		updateGaugeMetric(ctx, "OtherSys", gauge(rtm.OtherSys))
-		updateGaugeMetric(ctx, "PauseTotalNs", gauge(rtm.PauseTotalNs))
-		updateGaugeMetric(ctx, "StackInuse", gauge(rtm.StackInuse))
-		updateGaugeMetric(ctx, "StackSys", gauge(rtm.StackSys))
-		updateGaugeMetric(ctx, "Sys", gauge(rtm.Sys))
-		updateGaugeMetric(ctx, "TotalAlloc", gauge(rtm.TotalAlloc))
-		updateGaugeMetric(ctx, "RandomValue", gauge(rand.Float64()))
+		mem.Alloc = gauge(rtm.Alloc)
+		mem.BuckHashSys = gauge(rtm.BuckHashSys)
+		mem.Frees = gauge(rtm.Frees)
+		mem.GCCPUFraction = gauge(rtm.GCCPUFraction)
+		mem.GCSys = gauge(rtm.GCSys)
+		mem.HeapAlloc = gauge(rtm.HeapAlloc)
+		mem.HeapIdle = gauge(rtm.HeapInuse)
+		mem.HeapInuse = gauge(rtm.HeapInuse)
+		mem.HeapObjects = gauge(rtm.HeapObjects)
+		mem.HeapReleased = gauge(rtm.HeapReleased)
+		mem.HeapSys = gauge(rtm.HeapSys)
+		mem.LastGC = gauge(rtm.LastGC)
+		mem.Lookups = gauge(rtm.Lookups)
+		mem.MCacheInuse = gauge(rtm.MCacheInuse)
+		mem.MCacheSys = gauge(rtm.MCacheSys)
+		mem.MSpanInuse = gauge(rtm.MSpanInuse)
+		mem.MSpanSys = gauge(rtm.MSpanSys)
+		mem.Mallocs = gauge(rtm.Mallocs)
+		mem.NextGC = gauge(rtm.NextGC)
+		mem.NumForcedGC = gauge(rtm.NumForcedGC)
+		mem.NumGC = gauge(rtm.NumGC)
+		mem.OtherSys = gauge(rtm.OtherSys)
+		mem.PauseTotalNs = gauge(rtm.PauseTotalNs)
+		mem.StackInuse = gauge(rtm.StackInuse)
+		mem.StackSys = gauge(rtm.StackSys)
+		mem.Sys = gauge(rtm.Sys)
+		mem.TotalAlloc = gauge(rtm.TotalAlloc)
+		mem.RandomValue = gauge(rand.Float64())
 
 		count++
-		updateCounterMetric(ctx, "PollCount", counter(count))
+		mem.PollCount = counter(count)
 
 		log.Printf("metrics updated %v", count)
 	}

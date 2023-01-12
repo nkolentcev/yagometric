@@ -6,8 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nkolentcev/yagometric/internal/handlers"
 	"github.com/nkolentcev/yagometric/internal/storage"
 	"github.com/stretchr/testify/assert"
@@ -19,16 +17,7 @@ type counter int64
 
 func TestMain(t *testing.T) {
 	ms := storage.NewMemStorage()
-	handler := handlers.NewMetricHandler(ms)
-
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", handler.GetMetricsValuesList)
-		r.Get("/value/{type}/{name}", handler.GetMetricValue)
-		r.Post("/update/{type}/{name}/{value}", handler.UpdateMetric)
-	})
-
+	r := handlers.Router()
 	st := httptest.NewServer(r)
 	defer st.Close()
 
