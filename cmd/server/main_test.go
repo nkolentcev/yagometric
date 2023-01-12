@@ -8,8 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/nkolentcev/yagometric/cmd/server/handlers"
-	"github.com/nkolentcev/yagometric/cmd/server/storage"
+	"github.com/nkolentcev/yagometric/cmd/internal/handlers"
+	"github.com/nkolentcev/yagometric/cmd/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
