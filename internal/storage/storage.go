@@ -3,18 +3,16 @@ package storage
 import "sync"
 
 type MemStorage struct {
-	Metrics map[string]float64
-	mutex   sync.Mutex
+	Metrics  map[string]float64
+	Counters map[string]int
+	mutex    sync.Mutex
 }
-
-// // AddMetrics implements Storage
-// func (*MemStorage) AddMetrics(name string, value float64) {
-// 	panic("unimplemented")
-// }
 
 type Storage interface {
 	AddMetric(name string, value float64)
+	UpdateCounter(name string, value int)
 	GetMetricValue(name string)
+	GetCounter(name string)
 }
 
 func NewMemStorage() *MemStorage {
@@ -24,20 +22,28 @@ func NewMemStorage() *MemStorage {
 	return &ms
 }
 
-func (ms *MemStorage) AddMetric(name string, value float64, metricType string) {
+func (ms *MemStorage) AddMetric(name string, value float64) {
 	ms.mutex.Lock()
-	if metricType == "counter" {
-		ms.Metrics[name] += value
-	} else {
-		ms.Metrics[name] = value
-	}
-
+	ms.Metrics[name] = value
+	ms.mutex.Unlock()
+}
+func (ms *MemStorage) UpdateCounter(name string, value int) {
+	ms.mutex.Lock()
+	ms.Counters[name] += value
 	ms.mutex.Unlock()
 }
 
 func (ms *MemStorage) GetMetricValue(name string) (value float64) {
 	if _, ok := ms.Metrics[name]; ok {
 		value = ms.Metrics[name]
+		return value
+	}
+	return 0
+}
+
+func (ms *MemStorage) GetCounter(name string) (value int) {
+	if _, ok := ms.Counters[name]; ok {
+		value = ms.Counters[name]
 		return value
 	}
 	return 0

@@ -38,20 +38,29 @@ func (mh MyMetricHandler) updateMetric(w http.ResponseWriter, r *http.Request) {
 
 	metricType := chi.URLParam(r, "type")
 
-	if !(metricType == "gauge") && !(metricType == "counter") {
+	switch metricType {
+	case "gauge":
+		value, err := strconv.ParseFloat(chi.URLParam(r, "value"), 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Println("unable convert string metric")
+			return
+		}
+		mh.storage.AddMetric(name, value)
+		w.WriteHeader(http.StatusOK)
+	case "counter":
+		value, err := strconv.Atoi(chi.URLParam(r, "value"))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Println("unable convert string metric")
+			return
+		}
+		mh.storage.UpdateCounter(name, value)
+		w.WriteHeader(http.StatusOK)
+	default:
 		w.WriteHeader(http.StatusNotImplemented)
 		return
 	}
-
-	value, err := strconv.ParseFloat(chi.URLParam(r, "value"), 64)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Println("unable convert string metric")
-		return
-	}
-
-	mh.storage.AddMetric(name, value, metricType)
-	w.WriteHeader(http.StatusOK)
 }
 
 func (mh MyMetricHandler) getMetricValue(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +101,10 @@ func (mh MyMetricHandler) getMetricValue(w http.ResponseWriter, r *http.Request)
 
 func (mh MyMetricHandler) getMetricsValuesList(w http.ResponseWriter, r *http.Request) {
 	for n, v := range mh.storage.Metrics {
+		samp := fmt.Sprintf("-> %s : %v ;\n", n, v)
+		w.Write([]byte(samp))
+	}
+	for n, v := range mh.storage.Counters {
 		samp := fmt.Sprintf("-> %s : %v ;\n", n, v)
 		w.Write([]byte(samp))
 	}

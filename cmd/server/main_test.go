@@ -21,8 +21,8 @@ func TestMain(t *testing.T) {
 	st := httptest.NewServer(r)
 	defer st.Close()
 
-	ms.AddMetric("sys", 911.911, "gauge")
-	//ms.AddMetric("PolCount", 50, "counter")
+	ms.AddMetric("sys", 911.911)
+	ms.UpdateCounter("PollCount", 50)
 
 	status, body := tsstRequest(t, st, "GET", "/value/gauge/sys")
 	assert.Equal(t, http.StatusNotFound, status)
