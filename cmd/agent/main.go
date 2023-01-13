@@ -60,7 +60,7 @@ func main() {
 	fmt.Println("start")
 	ctx, cancel := context.WithCancel(context.Background())
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	go readMetrics(ctx, mem)
 	go updateMetrics(ctx, mem)
 	<-sig
