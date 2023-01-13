@@ -96,20 +96,17 @@ func sendMetrics(ctx context.Context, uri string) {
 }
 
 func updateGaugeMetric(ctx context.Context, metricName string, metricValue gauge) {
-	host := ctx.Value("host")
-	port := ctx.Value("port")
+
+	host := ctx.Value(hostKey)
+	port := ctx.Value(portKey)
 	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%f", host, port, "gauge", metricName, metricValue)
-
-	fmt.Println(ctx.Value("port"))
-	fmt.Println(ctx.Value("host"))
 	fmt.Println(uri)
-
 	sendMetrics(ctx, uri)
 }
 
 func updateCounterMetric(ctx context.Context, metricName string, metricValue counter) {
-	host := ctx.Value("host")
-	port := ctx.Value("port")
+	host := ctx.Value(hostKey)
+	port := ctx.Value(portKey)
 	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%v", host, port, "counter", metricName, metricValue)
 	sendMetrics(ctx, uri)
 }
