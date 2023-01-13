@@ -46,6 +46,7 @@ type metrics struct {
 	RandomValue   gauge
 	PollCount     counter
 }
+type contextKey int
 
 type Agent struct {
 	pollInterval   time.Duration
@@ -53,6 +54,11 @@ type Agent struct {
 	reportHost     string
 	reportPort     string
 }
+
+const (
+	hostKey contextKey = iota
+	portKey
+)
 
 func NewAgent(cfg *config.AgentCfg) *Agent {
 	var agent Agent
@@ -65,8 +71,8 @@ func NewAgent(cfg *config.AgentCfg) *Agent {
 
 func (a *Agent) Start(ctx context.Context) {
 
-	ctx = context.WithValue(ctx, "host", a.reportHost)
-	ctx = context.WithValue(ctx, "port", a.reportPort)
+	ctx = context.WithValue(ctx, hostKey, a.reportHost)
+	ctx = context.WithValue(ctx, portKey, a.reportPort)
 
 	mem := new(metrics)
 	go readMetrics(ctx, a.pollInterval, mem)
