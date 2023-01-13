@@ -18,6 +18,7 @@ type Storage interface {
 func NewMemStorage() *MemStorage {
 	var ms MemStorage
 	ms.Metrics = make(map[string]float64)
+	ms.Counters = make(map[string]int)
 	ms.mutex = sync.Mutex{}
 	return &ms
 }

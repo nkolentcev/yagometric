@@ -93,6 +93,11 @@ func updateGaugeMetric(ctx context.Context, metricName string, metricValue gauge
 	host := ctx.Value("host")
 	port := ctx.Value("port")
 	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%f", host, port, "gauge", metricName, metricValue)
+
+	fmt.Println(ctx.Value("port"))
+	fmt.Println(ctx.Value("host"))
+	fmt.Println(uri)
+
 	sendMetrics(ctx, uri)
 }
 
@@ -104,6 +109,7 @@ func updateCounterMetric(ctx context.Context, metricName string, metricValue cou
 }
 
 func updateMetrics(ctx context.Context, reportInterval time.Duration, mem *metrics) {
+
 	for {
 		<-time.After(reportInterval)
 		updateGaugeMetric(ctx, "Alloc", mem.Alloc)

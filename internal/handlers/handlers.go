@@ -11,15 +11,14 @@ import (
 	"github.com/nkolentcev/yagometric/internal/storage"
 )
 
-func Router() *chi.Mux {
-	memStorage := storage.NewMemStorage()
-	handler := newMetricHandler(memStorage)
+func (mh MyMetricHandler) Router() *chi.Mux {
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", handler.getMetricsValuesList)
-		r.Get("/value/{type}/{name}", handler.getMetricValue)
-		r.Post("/update/{type}/{name}/{value}", handler.updateMetric)
+		r.Get("/", mh.getMetricsValuesList)
+		r.Get("/value/{type}/{name}", mh.getMetricValue)
+		r.Post("/update/{type}/{name}/{value}", mh.updateMetric)
 	})
 	return r
 }
@@ -28,7 +27,7 @@ type MyMetricHandler struct {
 	storage *storage.MemStorage
 }
 
-func newMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
+func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
 	return &MyMetricHandler{storage: storage}
 }
 
@@ -74,25 +73,31 @@ func (mh MyMetricHandler) getMetricValue(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	resp := mh.storage.GetMetricValue(name)
-	if resp == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		log.Printf("wrong metric name %s\n", name)
-		return
-	}
 	switch metricType {
 	case "gauge":
+		resp := mh.storage.GetMetricValue(name)
+		if resp == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			log.Printf("wrong metric name %s\n", name)
+			return
+		}
 		_, err := w.Write([]byte(fmt.Sprintf("%.3f\n", resp)))
 		if err != nil {
 			log.Printf("cant write response on body")
 		}
 	case "counter":
+		resp := mh.storage.GetCounter(name)
+		if resp == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			log.Printf("wrong metric name %s\n", name)
+			return
+		}
 		_, err := w.Write([]byte(fmt.Sprintf("%v\n", int(resp))))
 		if err != nil {
 			log.Printf("cant write response on body")
 		}
 	default:
-		_, err := w.Write([]byte(fmt.Sprintf("%v\n", resp)))
+		_, err := w.Write([]byte(fmt.Sprintf("%v\n", nil)))
 		if err != nil {
 			log.Printf("cant write response on body")
 		}

@@ -17,7 +17,8 @@ type counter int64
 
 func TestMain(t *testing.T) {
 	ms := storage.NewMemStorage()
-	r := handlers.Router()
+	handler := handlers.NewMetricHandler(ms)
+	r := handler.Router()
 	st := httptest.NewServer(r)
 	defer st.Close()
 
@@ -25,7 +26,23 @@ func TestMain(t *testing.T) {
 	ms.UpdateCounter("PollCount", 50)
 
 	status, body := tsstRequest(t, st, "GET", "/value/gauge/sys")
-	assert.Equal(t, http.StatusNotFound, status)
+	assert.Equal(t, http.StatusOK, status)
+	assert.Equal(t, "911.911\n", body)
+
+	status, body = tsstRequest(t, st, "GET", "/value/counter/PollCount")
+	assert.Equal(t, http.StatusOK, status)
+	assert.Equal(t, "50\n", body)
+
+	status, body = tsstRequest(t, st, "GET", "/value/undercover/PollCount")
+	assert.Equal(t, http.StatusNotImplemented, status)
+	assert.Equal(t, "", body)
+
+	status, body = tsstRequest(t, st, "POST", "/update/counter/PollCount/3")
+	assert.Equal(t, http.StatusOK, status)
+	assert.Equal(t, "", body)
+
+	status, body = tsstRequest(t, st, "POST", "/update/counter/PollCount/3.141592")
+	assert.Equal(t, http.StatusBadRequest, status)
 	assert.Equal(t, "", body)
 }
 
