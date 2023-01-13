@@ -12,6 +12,8 @@ const endpoint = ":8080"
 func main() {
 
 	r := handlers.Router()
-	log.Println(http.ListenAndServe(":8080", r))
-
+	err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		log.Println(err)
+	}
 }
