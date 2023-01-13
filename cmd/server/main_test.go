@@ -21,12 +21,12 @@ func TestMain(t *testing.T) {
 	st := httptest.NewServer(r)
 	defer st.Close()
 
-	ms.AddMetric("Sys", 911.911, "gauge")
+	ms.AddMetric("sys", 911.911, "gauge")
 	//ms.AddMetric("PolCount", 50, "counter")
 
-	status, body := tsstRequest(t, st, "GET", "/")
-	assert.Equal(t, http.StatusOK, status)
-	assert.Equal(t, "-> Sys : 911.911 ;\n", body)
+	status, body := tsstRequest(t, st, "GET", "/value/gauge/sys")
+	assert.Equal(t, http.StatusNotFound, status)
+	assert.Equal(t, "", body)
 }
 
 func tsstRequest(t *testing.T, st *httptest.Server, method, uri string) (int, string) {
