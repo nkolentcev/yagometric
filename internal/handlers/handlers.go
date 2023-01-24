@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,6 +14,12 @@ import (
 
 type MyMetricHandler struct {
 	storage *storage.MemStorage
+}
+type Metrics struct {
+	ID    string   `json:"id"`
+	MType string   `json:"type"`
+	Delta *int64   `json:"delta,omitempty"`
+	Value *float64 `json:"value,omitempty"`
 }
 
 func (mh MyMetricHandler) Router() *chi.Mux {
@@ -113,4 +120,69 @@ func (mh MyMetricHandler) getMetricsValuesList(w http.ResponseWriter, r *http.Re
 		samp := fmt.Sprintf("-> %s : %v ;\n", n, v)
 		w.Write([]byte(samp))
 	}
+}
+
+func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Request) {
+
+	if r.Header.Get("Content-Type") != "" {
+		value := r.Header.Get("Content-Type")
+		if value != "application/json" {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Printf("wrong content type")
+			return
+		}
+	}
+
+	var metric Metrics
+	err := json.NewDecoder(r.Body).Decode(&metric)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print("unable decode metric data")
+		return
+	}
+
+	if metric.ID == "" {
+		w.WriteHeader(http.StatusNotFound)
+		log.Printf("undefined metric name")
+		return
+	}
+
+	name := metric.ID
+
+	switch metric.MType {
+	case "gauge":
+		resp := mh.storage.GetMetricValue(name)
+		if resp == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			log.Printf("wrong metric name %s\n", name)
+			return
+		}
+		metric.Value = &resp
+		metric.Delta = nil
+
+	case "counter":
+		resp := mh.storage.GetCounter(name)
+		if resp == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			log.Printf("wrong metric name %s\n", name)
+			return
+		}
+		tmp := int64(resp)
+		metric.Delta = &tmp
+		metric.Value = nil
+
+	default:
+		log.Printf("unknown metric type")
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	dataJSON, err := json.Marshal(metric)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("unable serialise metric data: %v", metric)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "tapplication/json")
+	w.Write(dataJSON)
 }
