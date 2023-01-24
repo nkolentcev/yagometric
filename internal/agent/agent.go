@@ -1,7 +1,9 @@
 package agent
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand"
@@ -15,7 +17,14 @@ import (
 type gauge float64
 type counter int64
 
-type metrics struct {
+type Metrics struct {
+	ID    string   `json:"id"`              // имя метрики
+	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta *int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+}
+
+type met struct {
 	Alloc         gauge
 	BuckHashSys   gauge
 	Frees         gauge
@@ -74,19 +83,41 @@ func (a *Agent) Start(ctx context.Context) {
 	ctx = context.WithValue(ctx, hostKey, a.reportHost)
 	ctx = context.WithValue(ctx, portKey, a.reportPort)
 
-	mem := new(metrics)
+	mem := new(met)
 	go readMetrics(ctx, a.pollInterval, mem)
 	go updateMetrics(ctx, a.reportInterval, mem)
 }
 
-func sendMetrics(ctx context.Context, uri string) {
+func updateMetric(ctx context.Context, metricType string, metricName string, metricValue gauge) {
+
+	host := ctx.Value(hostKey)
+	port := ctx.Value(portKey)
+
+	metrics := new(Metrics)
+	metrics.ID = metricName
+	metrics.MType = metricType
+
+	switch metricType {
+	case "gauge":
+		ftype := float64(metricValue)
+		metrics.Value = &ftype
+	case "counter":
+		ftype := int64(metricValue)
+		metrics.Delta = &ftype
+	}
+
+	dataJSON, err := json.Marshal(metrics)
+	if err != nil {
+		log.Panicf("unable convert metric in json %s", err)
+	}
+	uri := fmt.Sprintf("http://%s:%s/update/", host, port)
 
 	client := http.Client{}
-	request, err := http.NewRequest(http.MethodPost, uri, nil)
+	request, err := http.NewRequest(http.MethodPost, uri, bytes.NewReader(dataJSON))
 	if err != nil {
 		fmt.Println(err)
 	}
-	request.Header.Add("Content-Type", "text/plain")
+	request.Header.Add("Content-Type", "tapplication/json")
 
 	response, err := client.Do(request)
 	if err != nil {
@@ -95,60 +126,46 @@ func sendMetrics(ctx context.Context, uri string) {
 	}
 }
 
-func updateGaugeMetric(ctx context.Context, metricName string, metricValue gauge) {
-
-	host := ctx.Value(hostKey)
-	port := ctx.Value(portKey)
-	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%f", host, port, "gauge", metricName, metricValue)
-	fmt.Println(uri)
-	sendMetrics(ctx, uri)
-}
-
-func updateCounterMetric(ctx context.Context, metricName string, metricValue counter) {
-	host := ctx.Value(hostKey)
-	port := ctx.Value(portKey)
-	uri := fmt.Sprintf("http://%s:%s/update/%s/%s/%v", host, port, "counter", metricName, metricValue)
-	sendMetrics(ctx, uri)
-}
-
-func updateMetrics(ctx context.Context, reportInterval time.Duration, mem *metrics) {
+func updateMetrics(ctx context.Context, reportInterval time.Duration, mem *met) {
 
 	for {
 		<-time.After(reportInterval)
-		updateGaugeMetric(ctx, "Alloc", mem.Alloc)
-		updateGaugeMetric(ctx, "BuckHashSys", mem.BuckHashSys)
-		updateGaugeMetric(ctx, "Frees", mem.Frees)
-		updateGaugeMetric(ctx, "GCCPUFraction", mem.GCCPUFraction)
-		updateGaugeMetric(ctx, "GCSys", mem.GCSys)
-		updateGaugeMetric(ctx, "HeapAlloc", mem.HeapAlloc)
-		updateGaugeMetric(ctx, "HeapIdle", mem.HeapInuse)
-		updateGaugeMetric(ctx, "HeapInuse", mem.HeapInuse)
-		updateGaugeMetric(ctx, "HeapObjects", mem.HeapObjects)
-		updateGaugeMetric(ctx, "HeapReleased", mem.HeapReleased)
-		updateGaugeMetric(ctx, "HeapSys", mem.HeapSys)
-		updateGaugeMetric(ctx, "LastGC", mem.LastGC)
-		updateGaugeMetric(ctx, "Lookups", mem.Lookups)
-		updateGaugeMetric(ctx, "MCacheInuse", mem.MCacheInuse)
-		updateGaugeMetric(ctx, "MCacheSys", mem.MCacheSys)
-		updateGaugeMetric(ctx, "MSpanInuse", mem.MSpanInuse)
-		updateGaugeMetric(ctx, "MSpanSys", mem.MSpanSys)
-		updateGaugeMetric(ctx, "Mallocs", mem.Mallocs)
-		updateGaugeMetric(ctx, "NextGC", mem.NextGC)
-		updateGaugeMetric(ctx, "NumForcedGC", mem.NumForcedGC)
-		updateGaugeMetric(ctx, "NumGC", mem.NumGC)
-		updateGaugeMetric(ctx, "OtherSys", mem.OtherSys)
-		updateGaugeMetric(ctx, "PauseTotalNs", mem.PauseTotalNs)
-		updateGaugeMetric(ctx, "StackInuse", mem.StackInuse)
-		updateGaugeMetric(ctx, "StackSys", mem.StackSys)
-		updateGaugeMetric(ctx, "Sys", mem.Sys)
-		updateGaugeMetric(ctx, "TotalAlloc", mem.TotalAlloc)
-		updateGaugeMetric(ctx, "RandomValue", mem.RandomValue)
-		updateCounterMetric(ctx, "PollCount", mem.PollCount)
+
+		updateMetric(ctx, "gauge", "Alloc", gauge(mem.Alloc))
+		updateMetric(ctx, "gauge", "BuckHashSys", gauge(mem.BuckHashSys))
+		updateMetric(ctx, "gauge", "Frees", gauge(mem.Frees))
+		updateMetric(ctx, "gauge", "GCCPUFraction", gauge(mem.GCCPUFraction))
+		updateMetric(ctx, "gauge", "GCSys", gauge(mem.GCSys))
+		updateMetric(ctx, "gauge", "HeapAlloc", gauge(mem.HeapAlloc))
+		updateMetric(ctx, "gauge", "HeapIdle", gauge(mem.HeapInuse))
+		updateMetric(ctx, "gauge", "HeapInuse", gauge(mem.HeapInuse))
+		updateMetric(ctx, "gauge", "HeapObjects", gauge(mem.HeapObjects))
+		updateMetric(ctx, "gauge", "HeapReleased", gauge(mem.HeapReleased))
+		updateMetric(ctx, "gauge", "HeapSys", gauge(mem.HeapSys))
+		updateMetric(ctx, "gauge", "LastGC", gauge(mem.LastGC))
+		updateMetric(ctx, "gauge", "Lookups", gauge(mem.Lookups))
+		updateMetric(ctx, "gauge", "MCacheInuse", gauge(mem.MCacheInuse))
+		updateMetric(ctx, "gauge", "MCacheSys", gauge(mem.MCacheSys))
+		updateMetric(ctx, "gauge", "MSpanInuse", gauge(mem.MSpanInuse))
+		updateMetric(ctx, "gauge", "MSpanSys", gauge(mem.MSpanSys))
+		updateMetric(ctx, "gauge", "Mallocs", gauge(mem.Mallocs))
+		updateMetric(ctx, "gauge", "NextGC", gauge(mem.NextGC))
+		updateMetric(ctx, "gauge", "NumForcedGC", gauge(mem.NumForcedGC))
+		updateMetric(ctx, "gauge", "NumGC", gauge(mem.NumGC))
+		updateMetric(ctx, "gauge", "OtherSys", gauge(mem.OtherSys))
+		updateMetric(ctx, "gauge", "PauseTotalNs", gauge(mem.PauseTotalNs))
+		updateMetric(ctx, "gauge", "StackInuse", gauge(mem.StackInuse))
+		updateMetric(ctx, "gauge", "StackSys", gauge(mem.StackSys))
+		updateMetric(ctx, "gauge", "Sys", gauge(mem.Sys))
+		updateMetric(ctx, "gauge", "TotalAlloc", gauge(mem.TotalAlloc))
+		updateMetric(ctx, "gauge", "RandomValue", gauge(mem.RandomValue))
+		updateMetric(ctx, "counter", "PollCount", gauge(mem.PollCount))
+
 		log.Printf("metrics sent %v", mem.PollCount)
 	}
 }
 
-func readMetrics(ctx context.Context, pollInterval time.Duration, mem *metrics) {
+func readMetrics(ctx context.Context, pollInterval time.Duration, mem *met) {
 	var rtm runtime.MemStats
 	count := 0
 	for {

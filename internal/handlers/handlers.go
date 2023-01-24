@@ -11,20 +11,20 @@ import (
 	"github.com/nkolentcev/yagometric/internal/storage"
 )
 
+type MyMetricHandler struct {
+	storage *storage.MemStorage
+}
+
 func (mh MyMetricHandler) Router() *chi.Mux {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", mh.getMetricsValuesList)
-		r.Get("/value/{type}/{name}", mh.getMetricValue)
-		r.Post("/update/{type}/{name}/{value}", mh.updateMetric)
-	})
-	return r
-}
 
-type MyMetricHandler struct {
-	storage *storage.MemStorage
+	r.Get("/", mh.getMetricsValuesList)
+	r.Get("/value/{type}/{name}", mh.getMetricValue)
+	r.Post("/update/{type}/{name}/{value}", mh.updateMetric)
+
+	return r
 }
 
 func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
