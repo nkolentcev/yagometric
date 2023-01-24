@@ -186,3 +186,65 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 	w.Header().Add("Content-Type", "tapplication/json")
 	w.Write(dataJSON)
 }
+
+func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.Request) {
+
+	if r.Header.Get("Content-Type") != "" {
+		value := r.Header.Get("Content-Type")
+		if value != "application/json" {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Printf("wrong content type")
+			return
+		}
+	}
+
+	var metric Metrics
+	err := json.NewDecoder(r.Body).Decode(&metric)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Print("unable decode metric data")
+		return
+	}
+
+	if metric.Value == nil && metric.Delta == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("nil data in receving metric")
+		return
+	}
+
+	switch metric.MType {
+	case "gauge":
+		if metric.Delta == nil {
+			w.WriteHeader(http.StatusNotFound)
+			log.Printf("recive gauge metric with nil counter")
+			return
+		}
+		mh.storage.AddMetric(metric.ID, *metric.Value)
+		resp := mh.storage.GetMetricValue(metric.ID)
+		metric.Value = &resp
+
+	case "counter":
+		if metric.Delta == nil {
+			w.WriteHeader(http.StatusNotFound)
+			log.Printf("recive counter metric with nil counter")
+			return
+		}
+		mh.storage.UpdateCounter(metric.ID, int(*metric.Delta))
+		resp := mh.storage.GetCounter(metric.ID)
+		tmp := int64(resp)
+		metric.Delta = &tmp
+	default:
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("unknown metric type: %s", metric.ID)
+	}
+
+	dataJSON, err := json.Marshal(metric)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("unable serialise metric data: %v", metric)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "tapplication/json")
+	w.Write(dataJSON)
+}
