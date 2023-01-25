@@ -36,7 +36,7 @@ func NewServerCfg() *ServerCfg {
 	var scfg ServerCfg
 
 	flag.StringVar(&scfg.Address, "a", "127.0.0.1:8080", "srv host and port")
-	flag.DurationVar(&scfg.StoreInterval, "i", 300*time.Second, "update cache interval")
+	flag.DurationVar(&scfg.StoreInterval, "i", 30*time.Second, "update cache interval")
 	flag.BoolVar(&scfg.Restore, "r", true, "init recover")
 	flag.StringVar(&scfg.FilePath, "f", "/tmp/devops-metrics-db.json", "temporary cache filepath")
 	flag.Parse()

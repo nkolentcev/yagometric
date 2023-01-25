@@ -14,14 +14,14 @@ import (
 func main() {
 	scfg := config.NewServerCfg()
 	storage := storage.NewMemStorage()
-	// cache := tmpcache.NewReaderCache(scfg, storage)
+	cache := tmpcache.NewReaderCache(scfg, storage)
 
-	// if scfg.Restore {
-	// 	cache.ReadeCache()
-	// }
+	if scfg.Restore {
+		cache.ReadeCache()
+	}
 
-	cache := tmpcache.NewSaveCache(scfg, storage)
-	go cache.WriteCash()
+	cache = tmpcache.NewSaveCache(scfg, storage)
+	go cache.Work()
 
 	handler := handlers.NewMetricHandler(storage)
 	routers := handler.Router()
