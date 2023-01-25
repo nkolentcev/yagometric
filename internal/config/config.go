@@ -25,7 +25,7 @@ func NewConfig() *AgentCfg {
 
 	flag.StringVar(&agentCfg.Address, "a", "127.0.0.1:8080", "srv host and port")
 	flag.DurationVar(&agentCfg.PollInterval, "p", 2*time.Second, "update interval")
-	flag.DurationVar(&agentCfg.ReportInterval, "r", 5*time.Second, "report interval")
+	flag.DurationVar(&agentCfg.ReportInterval, "r", 10*time.Second, "report interval")
 	flag.Parse()
 
 	_ = env.Parse(&agentCfg)
