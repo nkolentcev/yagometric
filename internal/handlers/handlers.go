@@ -127,17 +127,16 @@ func (mh MyMetricHandler) getMetricsValuesList(w http.ResponseWriter, r *http.Re
 
 func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Request) {
 
-	// if r.Header.Get("Content-Type") != "" {
-	// 	value := r.Header.Get("Content-Type")
-	// 	if value != "application/json" {
-	// 		w.WriteHeader(http.StatusBadRequest)
-	// 		log.Printf("wrong content type")
-	// 		return
-	// 	}
-	// }
+	if r.Header.Get("Content-Type") != "" {
+		value := r.Header.Get("Content-Type")
+		if value != "application/json" {
+			w.WriteHeader(http.StatusBadRequest)
+			log.Printf("wrong content type")
+			return
+		}
+	}
 
 	w.Header().Add("Content-Type", "application/json")
-	w.Header().Add("Accept", "application/json")
 
 	metric := new(Metrics)
 	err := json.NewDecoder(r.Body).Decode(&metric)

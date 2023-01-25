@@ -11,18 +11,16 @@ import (
 	"github.com/nkolentcev/yagometric/internal/tmpcache"
 )
 
-const endpoint = ":8080"
-
 func main() {
 	scfg := config.NewServerCfg()
 	storage := storage.NewMemStorage()
-	cache := tmpcache.NewReaderCache(scfg, storage)
+	// cache := tmpcache.NewReaderCache(scfg, storage)
 
-	if scfg.Restore {
-		cache.ReadeCache()
-	}
+	// if scfg.Restore {
+	// 	cache.ReadeCache()
+	// }
 
-	cache = tmpcache.NewSaveCache(scfg, storage)
+	cache := tmpcache.NewSaveCache(scfg, storage)
 	go cache.WriteCash()
 
 	handler := handlers.NewMetricHandler(storage)
