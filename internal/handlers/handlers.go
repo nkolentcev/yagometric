@@ -139,7 +139,7 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Accept", "application/json")
 
-	var metric Metrics
+	metric := new(Metrics)
 	err := json.NewDecoder(r.Body).Decode(&metric)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -160,14 +160,12 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 		resp := mh.storage.GetMetricValue(name)
 		metric.Value = &resp
 		metric.Delta = nil
-		log.Printf("gauge: %v", &resp)
 
 	case "counter":
 		resp := mh.storage.GetCounter(name)
 		tmp := int64(resp)
 		metric.Delta = &tmp
 		metric.Value = nil
-		log.Printf("counter: %v", &tmp)
 
 	default:
 		log.Printf("unknown metric type")
