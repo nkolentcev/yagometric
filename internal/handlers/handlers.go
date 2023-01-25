@@ -217,25 +217,16 @@ func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.R
 
 	switch metric.MType {
 	case "gauge":
-		if metric.Delta == nil {
-			w.WriteHeader(http.StatusNotFound)
-			log.Printf("recive gauge metric with nil counter")
-			return
-		}
 		mh.storage.AddMetric(metric.ID, *metric.Value)
 		resp := mh.storage.GetMetricValue(metric.ID)
 		metric.Value = &resp
-
+		metric.Delta = nil
 	case "counter":
-		if metric.Delta == nil {
-			w.WriteHeader(http.StatusNotFound)
-			log.Printf("recive counter metric with nil counter")
-			return
-		}
 		mh.storage.UpdateCounter(metric.ID, int(*metric.Delta))
 		resp := mh.storage.GetCounter(metric.ID)
 		tmp := int64(resp)
 		metric.Delta = &tmp
+		metric.Value = nil
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("unknown metric type: %s", metric.ID)

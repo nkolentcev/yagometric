@@ -102,6 +102,7 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 	}
 
 	dataJSON, err := json.Marshal(metrics)
+
 	if err != nil {
 		log.Panicf("unable convert metric in json %s", err)
 	}
@@ -112,7 +113,7 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 	if err != nil {
 		fmt.Println(err)
 	}
-	request.Header.Add("Content-Type", "tapplication/json")
+	request.Header.Add("Content-Type", "application/json")
 
 	response, err := client.Do(request)
 	if err != nil {
