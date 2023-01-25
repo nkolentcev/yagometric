@@ -150,26 +150,16 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	name := metric.ID
+	name := string(metric.ID)
 
 	switch metric.MType {
 	case "gauge":
 		resp := mh.storage.GetMetricValue(name)
-		if resp == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			log.Printf("wrong metric name %s\n", name)
-			return
-		}
 		metric.Value = &resp
 		metric.Delta = nil
 
 	case "counter":
 		resp := mh.storage.GetCounter(name)
-		if resp == 0 {
-			w.WriteHeader(http.StatusNotFound)
-			log.Printf("wrong metric name %s\n", name)
-			return
-		}
 		tmp := int64(resp)
 		metric.Delta = &tmp
 		metric.Value = nil
