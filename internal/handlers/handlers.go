@@ -221,6 +221,7 @@ func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.R
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("unknown metric type: %s", metric.ID)
+		return
 	}
 
 	dataJSON, err := json.Marshal(metric)
@@ -231,5 +232,5 @@ func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.R
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
-	w.Write(dataJSON)
+	_, _ = w.Write(dataJSON)
 }

@@ -96,9 +96,11 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 	case "gauge":
 		ftype := float64(metricValue)
 		metrics.Value = &ftype
+		metrics.Delta = nil
 	case "counter":
 		ftype := int64(metricValue)
 		metrics.Delta = &ftype
+		metrics.Value = nil
 	}
 
 	dataJSON, err := json.Marshal(metrics)
@@ -120,6 +122,7 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 		log.Println(err)
 		response.Body.Close()
 	}
+
 }
 
 func updateMetrics(ctx context.Context, reportInterval time.Duration, mem *met) {
