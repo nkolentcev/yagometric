@@ -60,28 +60,24 @@ type contextKey int
 type Agent struct {
 	pollInterval   time.Duration
 	reportInterval time.Duration
-	reportHost     string
-	reportPort     string
+	reportAddres   string
 }
 
 const (
-	hostKey contextKey = iota
-	portKey
+	Address contextKey = iota
 )
 
 func NewAgent(cfg *config.AgentCfg) *Agent {
 	var agent Agent
 	agent.pollInterval = cfg.PollInterval
 	agent.reportInterval = cfg.ReportInterval
-	agent.reportHost = cfg.Host
-	agent.reportPort = cfg.Port
+	agent.reportAddres = cfg.Address
 	return &agent
 }
 
 func (a *Agent) Start(ctx context.Context) {
 
-	ctx = context.WithValue(ctx, hostKey, a.reportHost)
-	ctx = context.WithValue(ctx, portKey, a.reportPort)
+	ctx = context.WithValue(ctx, Address, a.reportAddres)
 
 	mem := new(met)
 	go readMetrics(ctx, a.pollInterval, mem)
@@ -90,8 +86,7 @@ func (a *Agent) Start(ctx context.Context) {
 
 func updateMetric(ctx context.Context, metricType string, metricName string, metricValue gauge) {
 
-	host := ctx.Value(hostKey)
-	port := ctx.Value(portKey)
+	host := ctx.Value(Address)
 
 	metrics := new(Metrics)
 	metrics.ID = metricName
@@ -110,7 +105,7 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 	if err != nil {
 		log.Panicf("unable convert metric in json %s", err)
 	}
-	uri := fmt.Sprintf("http://%s:%s/update/", host, port)
+	uri := fmt.Sprintf("http://%s/update/", host)
 
 	client := http.Client{}
 	request, err := http.NewRequest(http.MethodPost, uri, bytes.NewReader(dataJSON))

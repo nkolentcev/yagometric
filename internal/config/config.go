@@ -1,21 +1,46 @@
 package config
 
 import (
+	"flag"
 	"time"
+
+	"github.com/caarlos0/env/v6"
 )
 
-type AgentCfg struct {
-	Host           string
-	Port           string
-	PollInterval   time.Duration
-	ReportInterval time.Duration
+type ServerCfg struct {
+	Address       string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+	FilePath      string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
+	StoreInterval time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
+	Restore       bool          `env:"RESTORE" envDefault:"true"`
 }
 
-func NewConfig(pollInterval int, reportInterval int) *AgentCfg {
+type AgentCfg struct {
+	Address        string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
+	PollInterval   time.Duration `env:"POLL_INTERVAL" envDefault:"2s"`
+	ReportInterval time.Duration `env:"REPORT_INTERVAL" envDefault:"5s"`
+}
+
+func NewConfig() *AgentCfg {
 	var agentCfg AgentCfg
-	agentCfg.Host = "127.0.0.1"
-	agentCfg.Port = "8080"
-	agentCfg.PollInterval = 2 * time.Second
-	agentCfg.ReportInterval = 10 * time.Second
+
+	flag.StringVar(&agentCfg.Address, "a", "127.0.0.1:8080", "srv host and port")
+	flag.DurationVar(&agentCfg.PollInterval, "p", 2*time.Second, "update interval")
+	flag.DurationVar(&agentCfg.ReportInterval, "r", 5*time.Second, "report interval")
+	flag.Parse()
+
+	_ = env.Parse(&agentCfg)
 	return &agentCfg
+}
+
+func NewServerCfg() *ServerCfg {
+	var scfg ServerCfg
+
+	flag.StringVar(&scfg.Address, "a", "127.0.0.1:8080", "srv host and port")
+	flag.DurationVar(&scfg.StoreInterval, "i", 300*time.Second, "update cache interval")
+	flag.BoolVar(&scfg.Restore, "r", true, "init recover")
+	flag.StringVar(&scfg.FilePath, "f", "/tmp/devops-metrics-db.json", "temporary cache filepath")
+	flag.Parse()
+
+	_ = env.Parse(&scfg)
+	return &scfg
 }
