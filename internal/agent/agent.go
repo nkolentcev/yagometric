@@ -99,7 +99,6 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 	case "counter":
 		ftype := int64(metricValue)
 		metrics.Delta = &ftype
-		fmt.Printf("counter %v", ftype)
 	}
 
 	dataJSON, err := json.Marshal(metrics)

@@ -186,7 +186,7 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Add("Content-Type", "tapplication/json")
+	w.Header().Add("Content-Type", "application/json")
 	w.Write(dataJSON)
 }
 
