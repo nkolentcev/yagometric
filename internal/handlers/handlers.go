@@ -169,6 +169,7 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 	default:
 		log.Printf("unknown metric type")
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	dataJSON, err := json.Marshal(metric)
@@ -178,7 +179,7 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(dataJSON)
+	_, _ = w.Write(dataJSON)
 }
 
 func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.Request) {
