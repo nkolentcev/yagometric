@@ -8,6 +8,7 @@ import (
 	"github.com/nkolentcev/yagometric/internal/config"
 	"github.com/nkolentcev/yagometric/internal/handlers"
 	"github.com/nkolentcev/yagometric/internal/storage"
+	"github.com/nkolentcev/yagometric/internal/tmpcache"
 )
 
 const endpoint = ":8080"
@@ -15,6 +16,15 @@ const endpoint = ":8080"
 func main() {
 	scfg := config.NewServerCfg()
 	storage := storage.NewMemStorage()
+	cache := tmpcache.NewReaderCache(scfg, storage)
+
+	if scfg.Restore {
+		cache.ReadeCache()
+	}
+
+	cache = tmpcache.NewSaveCache(scfg, storage)
+	go cache.WriteCash()
+
 	handler := handlers.NewMetricHandler(storage)
 	routers := handler.Router()
 	r := chi.NewRouter()
