@@ -211,12 +211,19 @@ func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.R
 		mh.storage.AddMetric(metric.ID, *metric.Value)
 		resp := mh.storage.GetMetricValue(metric.ID)
 		metric.Value = &resp
+		if resp == 0 {
+			metric.Value = nil
+		}
+
 		metric.Delta = nil
 	case "counter":
 		mh.storage.UpdateCounter(metric.ID, int(*metric.Delta))
 		resp := mh.storage.GetCounter(metric.ID)
 		tmp := int64(resp)
 		metric.Delta = &tmp
+		if resp == 0 {
+			metric.Delta = nil
+		}
 		metric.Value = nil
 	default:
 		w.WriteHeader(http.StatusBadRequest)
