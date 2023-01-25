@@ -31,6 +31,9 @@ func (mh MyMetricHandler) Router() *chi.Mux {
 	r.Get("/value/{type}/{name}", mh.getMetricValue)
 	r.Post("/update/{type}/{name}/{value}", mh.updateMetric)
 
+	r.Post("/value/", mh.getJSONMetricValue)
+	r.Post("/update/", mh.updateJSONMetricValue)
+
 	return r
 }
 
