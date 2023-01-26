@@ -120,9 +120,11 @@ func updateMetric(ctx context.Context, metricType string, metricName string, met
 	response, err := client.Do(request)
 	if err != nil {
 		log.Println(err)
+
+	}
+	if response != nil {
 		response.Body.Close()
 	}
-
 }
 
 func updateMetrics(ctx context.Context, reportInterval time.Duration, mem *met) {
