@@ -84,7 +84,7 @@ func (c *Cache) WriteCash() (err error) {
 	}
 
 	met.MType = "counter"
-	for m, v := range c.storage.Metrics {
+	for m, v := range c.storage.Counters {
 		met.ID = m
 		met.Value = nil
 		tmp := int64(v)
