@@ -3,17 +3,20 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	compress "github.com/nkolentcev/yagometric/internal/Compress"
 	"github.com/nkolentcev/yagometric/internal/storage"
 )
 
 type MyMetricHandler struct {
 	storage *storage.MemStorage
+	zipper  *compress.Zipper
 }
 type Metrics struct {
 	ID    string   `json:"id"`
@@ -37,8 +40,11 @@ func (mh MyMetricHandler) Router() *chi.Mux {
 	return r
 }
 
-func NewMetricHandler(storage *storage.MemStorage) *MyMetricHandler {
-	return &MyMetricHandler{storage: storage}
+func NewMetricHandler(storage *storage.MemStorage, zipper *compress.Zipper) *MyMetricHandler {
+	return &MyMetricHandler{
+		storage: storage,
+		zipper:  zipper,
+	}
 }
 
 func (mh MyMetricHandler) updateMetric(w http.ResponseWriter, r *http.Request) {
@@ -127,14 +133,12 @@ func (mh MyMetricHandler) getMetricsValuesList(w http.ResponseWriter, r *http.Re
 
 func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Request) {
 
-	if r.Header.Get("Content-Type") != "" {
-		value := r.Header.Get("Content-Type")
-		if value != "application/json" {
-			w.WriteHeader(http.StatusBadRequest)
-			log.Printf("wrong content type")
-			return
-		}
+	if r.Header.Get("Content-Type") != "application/json" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("wrong content type")
+		return
 	}
+
 	if r != nil {
 		defer r.Body.Close()
 	}
@@ -181,25 +185,43 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 		log.Printf("unable serialise metric data: %v", metric)
 		return
 	}
+
+	if r.Header.Get("Content-Encoding") == "gzip" {
+		dataJSON, err = mh.zipper.GZip(dataJSON)
+		if err != nil {
+			log.Printf("err: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Add("Accept-Encoding", "gzip")
+	}
+
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(dataJSON)
 }
 
 func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.Request) {
 
-	if r.Header.Get("Content-Type") != "" {
-		value := r.Header.Get("Content-Type")
-		if value != "application/json" {
-			w.WriteHeader(http.StatusBadRequest)
-			log.Printf("wrong content type")
+	if r.Header.Get("Content-Type") != "application/json" {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("wrong content type")
+		return
+	}
+
+	b, _ := io.ReadAll(r.Body)
+	if r.Header.Get("Content-Encoding") == "gzip" {
+		b, _ = mh.zipper.UnGZip(b)
+		if b == nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		w.Header().Add("Accept-Encoding", "gzip")
 	}
 
 	defer r.Body.Close()
 
 	var metric Metrics
-	err := json.NewDecoder(r.Body).Decode(&metric)
+	err := json.Unmarshal(b, &metric)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Print("unable decode metric data")

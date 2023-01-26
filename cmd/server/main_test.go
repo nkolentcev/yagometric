@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	compress "github.com/nkolentcev/yagometric/internal/Compress"
 	"github.com/nkolentcev/yagometric/internal/handlers"
 	"github.com/nkolentcev/yagometric/internal/storage"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,8 @@ type counter int64
 
 func TestMain(t *testing.T) {
 	ms := storage.NewMemStorage()
-	handler := handlers.NewMetricHandler(ms)
+	zp := compress.NewZipper()
+	handler := handlers.NewMetricHandler(ms, zp)
 	r := handler.Router()
 	st := httptest.NewServer(r)
 	defer st.Close()
