@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
 	scfg := config.NewServerCfg()
 	storage := storage.NewMemStorage()
 	cache := tmpcache.NewReaderCache(scfg, storage)
