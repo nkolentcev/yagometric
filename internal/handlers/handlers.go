@@ -186,14 +186,14 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if r.Header.Get("Content-Encoding") == "gzip" {
+	if r.Header.Get("Accept-Encoding") == "gzip" {
 		dataJSON, err = mh.zipper.GZip(dataJSON)
 		if err != nil {
 			log.Printf("err: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Header().Add("Accept-Encoding", "gzip")
+		w.Header().Add("Content-Encoding", "gzip")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -209,13 +209,13 @@ func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.R
 	}
 
 	b, _ := io.ReadAll(r.Body)
-	if r.Header.Get("Content-Encoding") == "gzip" {
+	if r.Header.Get("Accept-Encoding") == "gzip" {
 		b, _ = mh.zipper.UnGZip(b)
 		if b == nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Header().Add("Accept-Encoding", "gzip")
+		w.Header().Add("Content-Encoding", "gzip")
 	}
 
 	defer r.Body.Close()
