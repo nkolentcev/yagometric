@@ -121,18 +121,30 @@ func (mh MyMetricHandler) getMetricValue(w http.ResponseWriter, r *http.Request)
 }
 
 func (mh MyMetricHandler) getMetricsValuesList(w http.ResponseWriter, r *http.Request) {
+	var samp string
+	var err error
 	for n, v := range mh.storage.Metrics {
-		samp := fmt.Sprintf("-> %s : %v ;\n", n, v)
-		w.Write([]byte(samp))
+		samp += fmt.Sprintf("-> %s : %v ;\n", n, v)
 	}
 	for n, v := range mh.storage.Counters {
-		samp := fmt.Sprintf("-> %s : %v ;\n", n, v)
-		w.Write([]byte(samp))
+		samp += fmt.Sprintf("-> %s : %v ;\n", n, v)
 	}
+	b := []byte(samp)
+	if r.Header.Get("Accept-Encoding") == "gzip" {
+		b, err = mh.zipper.GZip(b)
+		if err != nil {
+			log.Panicf("err: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Header().Add("Content-Encoding", "gzip")
+	}
+	w.Header().Add("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
 }
 
 func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Request) {
-
 	if r.Header.Get("Content-Type") != "application/json" {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("wrong content type")
