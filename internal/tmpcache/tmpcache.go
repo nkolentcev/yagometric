@@ -106,7 +106,7 @@ func (c *Cache) WriteCash() (err error) {
 	return c.writer.Flush()
 }
 
-func (c *Cache) ReadeCache() (data []byte, err error) {
+func (c *Cache) ReadCache() (data []byte, err error) {
 	met := new(Metrics)
 	for {
 		if data, err = c.reader.ReadBytes('\n'); err != nil {
@@ -119,13 +119,9 @@ func (c *Cache) ReadeCache() (data []byte, err error) {
 
 		if met.MType == "gauge" {
 			c.storage.Metrics[met.ID] = *met.Value
-			*met.Value = 0
-			*met.Delta = 0
 		}
 		if met.MType == "counter" {
 			c.storage.Counters[met.ID] = int(*met.Delta)
-			*met.Value = 0
-			*met.Delta = 0
 		}
 	}
 }

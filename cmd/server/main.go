@@ -17,7 +17,7 @@ func main() {
 	cache := tmpcache.NewReaderCache(scfg, storage)
 
 	if scfg.Restore {
-		cache.ReadeCache()
+		cache.ReadCache()
 	}
 
 	cache = tmpcache.NewSaveCache(scfg, storage)
