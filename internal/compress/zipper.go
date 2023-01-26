@@ -37,7 +37,7 @@ func (c *Zipper) UnGZip(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("unable decomress data, err: %v", err)
 	}
 	if err := r.Close(); err != nil {
-		return nil, fmt.Errorf("unable write decompres data, err: %v", err)
+		return nil, fmt.Errorf("unable close reader decompres data, err: %v", err)
 	}
 
 	return b.Bytes(), nil
