@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	compress "github.com/nkolentcev/yagometric/internal/Compress"
+	"github.com/nkolentcev/yagometric/internal/compress"
 	"github.com/nkolentcev/yagometric/internal/config"
 	"github.com/nkolentcev/yagometric/internal/handlers"
 	"github.com/nkolentcev/yagometric/internal/storage"
