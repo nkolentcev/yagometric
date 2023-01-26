@@ -8,16 +8,16 @@ import (
 )
 
 type ServerCfg struct {
-	Address       string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
-	FilePath      string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
-	StoreInterval time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
-	Restore       bool          `env:"RESTORE" envDefault:"true"`
+	Address       string        `env:"ADDRESS"`
+	FilePath      string        `env:"STORE_FILE"`
+	StoreInterval time.Duration `env:"STORE_INTERVAL"`
+	Restore       bool          `env:"RESTORE"`
 }
 
 type AgentCfg struct {
-	Address        string        `env:"ADDRESS" envDefault:"127.0.0.1:8080"`
-	PollInterval   time.Duration `env:"POLL_INTERVAL" envDefault:"2s"`
-	ReportInterval time.Duration `env:"REPORT_INTERVAL" envDefault:"10s"`
+	Address        string        `env:"ADDRESS"`
+	PollInterval   time.Duration `env:"POLL_INTERVAL"`
+	ReportInterval time.Duration `env:"REPORT_INTERVAL"`
 }
 
 func NewConfig() *AgentCfg {
@@ -27,8 +27,8 @@ func NewConfig() *AgentCfg {
 	flag.DurationVar(&agentCfg.PollInterval, "p", 2*time.Second, "update interval")
 	flag.DurationVar(&agentCfg.ReportInterval, "r", 10*time.Second, "report interval")
 	flag.Parse()
-
 	_ = env.Parse(&agentCfg)
+
 	return &agentCfg
 }
 
