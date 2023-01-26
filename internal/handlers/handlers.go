@@ -193,7 +193,7 @@ func (mh MyMetricHandler) getJSONMetricValue(w http.ResponseWriter, r *http.Requ
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Header().Add("Accept-Encoding", "gzip")
+		w.Header().Add("Content-Encoding", "gzip")
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -215,7 +215,7 @@ func (mh MyMetricHandler) updateJSONMetricValue(w http.ResponseWriter, r *http.R
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Header().Add("Accept-Encoding", "gzip")
+		w.Header().Add("Content-Encoding", "gzip")
 	}
 
 	defer r.Body.Close()
