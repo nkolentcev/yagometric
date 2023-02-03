@@ -25,6 +25,13 @@ type Cache struct {
 	writer  *bufio.Writer
 }
 
+type Casher interface {
+	Work() error
+	Stop() error
+	WriteCaсhe() error
+	ReadCache() ([]byte, error)
+}
+
 func NewSaveCache(cfg *config.ServerCfg, storage *storage.MemStorage) *Cache {
 	file, _ := os.OpenFile(cfg.FilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	return &Cache{
@@ -50,7 +57,7 @@ func NewReaderCache(cfg *config.ServerCfg, storage *storage.MemStorage) *Cache {
 func (c *Cache) Work() (err error) {
 	for {
 		<-time.After(c.cfg.StoreInterval)
-		err := c.WriteCash()
+		err := c.WriteCaсhe()
 		if err != nil {
 			return err
 		}
@@ -61,7 +68,7 @@ func (c *Cache) Stop() (err error) {
 	return c.file.Close()
 }
 
-func (c *Cache) WriteCash() (err error) {
+func (c *Cache) WriteCaсhe() (err error) {
 	var data []byte
 	met := new(Metrics)
 	met.MType = "gauge"

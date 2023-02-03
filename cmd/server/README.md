@@ -1,5 +1,30 @@
-# cmd/agent
+# cmd/server
 
-/ - status
-/update/gauge   - значение метрик   тип gauge       (float64)
-/update/counter - значение счетчика тип conunter    (int64) 
+## Серверная часть учебного проекта
+
+версия 1.0.2 (2 спринт)
+сервер реализует обновление и получение значений метрик линейным и json форматом
+1. линейным
+   1. /value/{type}/{name} 
+                type - "gauge" (float64), "counter" (int64);
+                name - наименование (string)
+   2. /update/{type}/{name}/{value}
+                type    - "gauge" (float64), "counter" (int64);
+                name    - наименование (string)
+                value   - значение метрики (строковое представление float64/int64)
+2. json
+   1. /value/
+            {
+                "id":"PollCount",
+                "type":"counter",
+            
+            }
+   2. /update/
+            {
+                "id":"PollCount",
+                "type":"counter",
+                "delta":21
+            }
+
+Хранение текущих значений метрик и счетчиков осуществляется на стеке, временное хранилище файловое
+Конфиграция сервера задается через параметры окружения и параметрами командной строки
