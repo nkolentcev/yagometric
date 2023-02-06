@@ -17,6 +17,9 @@ func main() {
 	scfg := config.NewServerCfg()
 	keeper := keeper.New(scfg)
 	storage := storage.NewMemStorage(keeper)
+	if scfg.Restore {
+		keeper.RestoreCache(storage)
+	}
 	zipper := compress.NewZipper()
 
 	go storage.Keeper.Work(storage)
