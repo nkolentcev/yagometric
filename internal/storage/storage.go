@@ -1,25 +1,26 @@
 package storage
 
-import "sync"
+import (
+	"sync"
+)
+
+type Keeper interface {
+	Work(*MemStorage) error
+}
 
 type MemStorage struct {
 	Metrics  map[string]float64
 	Counters map[string]int
 	mutex    sync.Mutex
+	Keeper   Keeper
 }
 
-type Storage interface {
-	AddMetric(name string, value float64)
-	UpdateCounter(name string, value int)
-	GetMetricValue(name string)
-	GetCounter(name string)
-}
-
-func NewMemStorage() *MemStorage {
+func NewMemStorage(k Keeper) *MemStorage {
 	var ms MemStorage
 	ms.Metrics = make(map[string]float64)
 	ms.Counters = make(map[string]int)
 	ms.mutex = sync.Mutex{}
+	ms.Keeper = k
 	return &ms
 }
 

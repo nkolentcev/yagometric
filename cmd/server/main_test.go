@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/nkolentcev/yagometric/internal/compress"
+	"github.com/nkolentcev/yagometric/internal/config"
 	"github.com/nkolentcev/yagometric/internal/handlers"
+	"github.com/nkolentcev/yagometric/internal/keeper"
 	"github.com/nkolentcev/yagometric/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +19,9 @@ type gauge float64
 type counter int64
 
 func TestMain(t *testing.T) {
-	ms := storage.NewMemStorage()
+	cfg := config.NewServerCfg()
+	k := keeper.New(cfg)
+	ms := storage.NewMemStorage(k)
 	zp := compress.NewZipper()
 	handler := handlers.NewMetricHandler(ms, zp)
 	r := handler.Router()

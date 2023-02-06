@@ -8,23 +8,18 @@ import (
 	"github.com/nkolentcev/yagometric/internal/compress"
 	"github.com/nkolentcev/yagometric/internal/config"
 	"github.com/nkolentcev/yagometric/internal/handlers"
+	"github.com/nkolentcev/yagometric/internal/keeper"
 	"github.com/nkolentcev/yagometric/internal/storage"
-	"github.com/nkolentcev/yagometric/internal/tmpcache"
 )
 
 func main() {
 
 	scfg := config.NewServerCfg()
-	storage := storage.NewMemStorage()
+	keeper := keeper.New(scfg)
+	storage := storage.NewMemStorage(keeper)
 	zipper := compress.NewZipper()
-	cache := tmpcache.NewReaderCache(scfg, storage)
 
-	if scfg.Restore {
-		cache.ReadCache()
-	}
-
-	cache = tmpcache.NewSaveCache(scfg, storage)
-	go cache.Work()
+	go storage.Keeper.Work(storage)
 
 	handler := handlers.NewMetricHandler(storage, zipper)
 	routers := handler.Router()
