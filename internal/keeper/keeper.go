@@ -3,7 +3,6 @@ package keeper
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -123,6 +122,4 @@ func (k *Keeper) RestoreCache() (m RestoredCache, err error) {
 			m.Counters[met.ID] = int(*met.Delta)
 		}
 	}
-	fmt.Printf("restored %v", m)
-	return
 }
