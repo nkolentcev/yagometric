@@ -17,12 +17,19 @@ func main() {
 	scfg := config.NewServerCfg()
 	keeper := keeper.New(scfg)
 	storage := storage.NewMemStorage(keeper)
+
 	if scfg.Restore {
-		keeper.RestoreCache(storage)
+		rd, err := keeper.RestoreCache()
+		if err != nil {
+			log.Printf("restore error: %v", err)
+		}
+		storage.Counters = rd.Counters
+		storage.Metrics = rd.Metrics
 	}
-	zipper := compress.NewZipper()
 
 	go storage.Keeper.Work(storage)
+
+	zipper := compress.NewZipper()
 
 	handler := handlers.NewMetricHandler(storage, zipper)
 	routers := handler.Router()

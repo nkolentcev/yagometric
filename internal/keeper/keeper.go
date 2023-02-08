@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -25,6 +26,11 @@ type Metrics struct {
 	MType string   `json:"type"`
 	Delta *int64   `json:"delta,omitempty"`
 	Value *float64 `json:"value,omitempty"`
+}
+
+type RestoredCache struct {
+	Metrics  map[string]float64
+	Counters map[string]int
 }
 
 func New(cfg *config.ServerCfg) *Keeper {
@@ -95,19 +101,19 @@ func (k *Keeper) WriteCaсhe(ms *storage.MemStorage) (err error) {
 	return k.writer.Flush()
 }
 
-func (k *Keeper) RestoreCache(m *storage.MemStorage) (data []byte, err error) {
-
+func (k *Keeper) RestoreCache() (m RestoredCache, err error) {
+	var data []byte
 	file, _ := os.OpenFile(k.filepath, os.O_RDONLY|os.O_CREATE, 0777)
 	k.reader = bufio.NewReader(file)
 
 	met := new(Metrics)
 	for {
 		if data, err = k.reader.ReadBytes('\n'); err != nil {
-			return nil, err
+			return m, err
 		}
-		fmt.Println(data)
+		log.Println(data)
 		if err = json.Unmarshal(data, met); err != nil {
-			return nil, err
+			return m, err
 		}
 
 		if met.MType == "gauge" {
@@ -117,5 +123,6 @@ func (k *Keeper) RestoreCache(m *storage.MemStorage) (data []byte, err error) {
 			m.Counters[met.ID] = int(*met.Delta)
 		}
 	}
-
+	fmt.Printf("restored %v", m)
+	return
 }
